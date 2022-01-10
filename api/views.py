@@ -1,8 +1,8 @@
 from django.shortcuts import render
 from rest_framework.response import Response
 from rest_framework.decorators import api_view
-from .models import BlogPost
-from .serializers import BlogPostSerializer
+from .models import BlogPost, User, Comments
+from .serializers import BlogPostSerializer, CommentsSerializer
 
 # Create your views here.
 
@@ -51,7 +51,8 @@ def getPosts(req):
 @api_view(['GET'])
 def getPost(req,idx):
     post = BlogPost.objects.get(id=idx)
-    serializer = BlogPostSerializer(post,many=False)
+    comments = Comments.objects.filter(blogpost=post)
+    serializer = CommentsSerializer(comments,many=True)
     return Response(serializer.data)
 
 @api_view(['POST'])
@@ -61,13 +62,13 @@ def postPost(req):
     serializer = BlogPostSerializer(post, many=False)
     return Response(serializer.data)
 
-@api_view(['PUT'])
+@api_view(['POST'])
 def commentPost(req):
     data = req.data
     post = BlogPost.objects.get(id=data['idx'])
-    post.comments['all'].append(data['comment'])
-    post.save()
-    serializer = BlogPostSerializer(post, many=False)
+    user = User.objects.get(id=1)
+    comment = Comments.objects.create(blogpost=post, user=user, comment = data['comment'])
+    serializer = CommentsSerializer(comment, many=False)
     return Response(serializer.data)
 
 @api_view(['DELETE'])
